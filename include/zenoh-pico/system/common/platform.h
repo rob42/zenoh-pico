@@ -23,7 +23,6 @@
 
 #include "zenoh-pico/api/olv_macros.h"
 #include "zenoh-pico/config.h"
-#include "zenoh-pico/utils/logging.h"
 #include "zenoh-pico/utils/result.h"
 
 #if defined(ZENOH_LINUX) || defined(ZENOH_MACOS) || defined(ZENOH_BSD)
@@ -63,27 +62,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-void _z_report_system_error(int errcode);
-
-#define _Z_CHECK_SYS_ERR(expr)                      \
-    do {                                            \
-        int __res = expr;                           \
-        if (__res != 0) {                           \
-            _z_report_system_error(__res);          \
-            _Z_ERROR_RETURN(_Z_ERR_SYSTEM_GENERIC); \
-        }                                           \
-        return _Z_RES_OK;                           \
-    } while (false)
-
-#define _Z_RETURN_IF_SYS_ERR(expr)                  \
-    do {                                            \
-        int __res = expr;                           \
-        if (__res != 0) {                           \
-            _z_report_system_error(__res);          \
-            _Z_ERROR_RETURN(_Z_ERR_SYSTEM_GENERIC); \
-        }                                           \
-    } while (false)
 
 /*------------------ Random ------------------*/
 /**
@@ -526,6 +504,9 @@ z_result_t _z_get_time_since_epoch(_z_time_since_epoch *t);
 
 z_result_t _z_socket_set_non_blocking(const _z_sys_net_socket_t *sock);
 z_result_t _z_socket_accept(const _z_sys_net_socket_t *sock_in, _z_sys_net_socket_t *sock_out);
+z_result_t _z_ip_port_to_endpoint(const uint8_t *address, size_t address_len, uint16_t port, char *dst, size_t dst_len);
+z_result_t _z_socket_get_endpoints(const _z_sys_net_socket_t *sock, char *local, size_t local_len, char *remote,
+                                   size_t remote_len);
 void _z_socket_close(_z_sys_net_socket_t *sock);
 z_result_t _z_socket_wait_event(void *peers, _z_mutex_rec_t *mutex);
 

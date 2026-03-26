@@ -134,7 +134,7 @@ uint8_t _z_zint64_encode_buf(uint8_t *buf, uint64_t v) {
     uint8_t len = 0;
     size_t start = 0;
     while ((lv & VLE_LEN1_MASK) != 0) {
-        uint8_t c = (lv & 0x7f) | 0x80;
+        uint8_t c = (uint8_t)((lv & 0x7f) | 0x80);
         buf[start++] = c;
         len++;
         lv = lv >> (uint64_t)7;
@@ -247,6 +247,18 @@ z_result_t _z_buf_encode(_z_wbuf_t *wbf, const uint8_t *buf, size_t len) {
 z_result_t _z_slice_encode(_z_wbuf_t *wbf, const _z_slice_t *bs) {
     _Z_RETURN_IF_ERR(_z_zsize_encode(wbf, bs->len));
     return _z_slice_val_encode(wbf, bs);
+}
+
+z_result_t _z_slices_encode(_z_wbuf_t *wbf, const _z_slice_t *bs, size_t num_slices) {
+    size_t total_len = 0;
+    for (size_t i = 0; i < num_slices; ++i) {
+        total_len += bs[i].len;
+    }
+    _Z_RETURN_IF_ERR(_z_zsize_encode(wbf, total_len));
+    for (size_t i = 0; i < num_slices; ++i) {
+        _Z_RETURN_IF_ERR(_z_slice_val_encode(wbf, &bs[i]));
+    }
+    return _Z_RES_OK;
 }
 
 z_result_t _z_bytes_decode(_z_bytes_t *bs, _z_zbuf_t *zbf, _z_arc_slice_t *arcs) {

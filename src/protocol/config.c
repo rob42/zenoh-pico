@@ -127,7 +127,7 @@ z_result_t _z_str_intmap_from_strn(_z_str_intmap_t *strint, const char *s, uint8
 
                 // Process next key value
                 start = _z_cptr_char_offset(p_value_end, 1);
-                curr_len -= _z_ptr_char_diff(start, s);
+                curr_len = n - _z_ptr_char_diff(start, s);
             } else {
                 _Z_ERROR_LOG(_Z_ERR_SYSTEM_OUT_OF_MEMORY);
                 ret = _Z_ERR_SYSTEM_OUT_OF_MEMORY;
@@ -162,27 +162,40 @@ size_t _z_str_intmap_strlen(const _z_str_intmap_t *s, uint8_t argc, _z_str_intma
 
 void _z_str_intmap_onto_str(char *dst, size_t dst_len, const _z_str_intmap_t *s, uint8_t argc,
                             _z_str_intmapping_t argv[]) {
-    size_t len = dst_len;
+    if (dst == NULL || dst_len == 0) {
+        return;
+    }
+
+    // Remaining length excluding '\0'
+    size_t len = dst_len - (size_t)1;
     dst[0] = '\0';
     for (size_t i = 0; i < argc; i++) {
         char *v = _z_str_intmap_get(s, argv[i]._key);
         if (v != NULL) {
-            if (len > (size_t)0) {
+            if (len > (size_t)0 && dst[0] != '\0') {
                 _z_str_append(dst, INT_STR_MAP_LIST_SEPARATOR);  // List separator
                 len = len - (size_t)1;
             }
 
+            size_t key_len = strnlen(argv[i]._str, len);
             if (len > (size_t)0) {
-                (void)strncat(dst, argv[i]._str, len);  // Key
-                len = len - strlen(argv[i]._str);
+                size_t n = key_len < len ? key_len : len;
+                // Flawfinder: ignore [CWE-120]
+                (void)strncat(dst, argv[i]._str, n);  // Key
+                len = len - n;
             }
+
             if (len > (size_t)0) {
                 _z_str_append(dst, INT_STR_MAP_KEYVALUE_SEPARATOR);  // KeyValue separator
                 len = len - (size_t)1;
             }
+
+            size_t value_len = strnlen(v, len);
             if (len > (size_t)0) {
-                (void)strncat(dst, v, len);  // Value
-                len = len - strlen(v);
+                size_t n = value_len < len ? value_len : len;
+                // Flawfinder: ignore [CWE-120]
+                (void)strncat(dst, v, n);  // Value
+                len = len - n;
             }
         }
     }

@@ -121,7 +121,7 @@ z_result_t _z_multicast_transport_create(_z_transport_t *zt, _z_link_t *zl,
         ztm->_common._transmitted = false;
 
         // Transport link for multicast
-        ztm->_common._link = *zl;
+        ztm->_common._link = zl;
     }
     return ret;
 }
@@ -188,8 +188,10 @@ z_result_t _z_multicast_transport_close(_z_transport_multicast_t *ztm, uint8_t r
 }
 
 void _z_multicast_transport_clear(_z_transport_multicast_t *ztm, bool detach_tasks) {
-    _z_common_transport_clear(&ztm->_common, detach_tasks);
+    _z_transport_common_stop_tasks(&ztm->_common, detach_tasks);
     _z_transport_peer_multicast_slist_free(&ztm->_peers);
+    _z_transport_common_clear(
+        &ztm->_common);  // free common in the very end, as peers might access the link data in common while being freed
 }
 
 #else
